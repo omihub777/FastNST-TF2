@@ -44,16 +44,22 @@ class FastNST(tf.keras.Model):
     def __init__(self):
         super(FastNST, self).__init__()
         self.trans_net = TransformationNet()
-        self.loss_net = tf.keras.applications.VGG16(include_top=False, weights='imagenet')
+        base = tf.keras.applications.VGG16(include_top=False, weights='imagenet')
+        self.loss_net = tf.keras.Model(base.input, base.layers[-6].output)
         self.loss_net.trainable = False
+        self.outputs_name = ['block1_conv2', 'block2_conv2', 'block3_conv3', 'block4_conv3']
 
     def call(self, x):
         out = self.trans_net(x)
-        out = self.loss_net(out)
-        return out
+        outputs = []
+        for layer in self.loss_net.layers:
+            x = layer(x)
+            if layer.name in self.outputs_name:
+                outputs.append(x)
+        return outputs
 
     def transform(self, x):
-        out = self.trans_net(x)
+        out = self.trans_net(x, trainig=False)
         return out
 
 
@@ -61,11 +67,11 @@ if __name__ == '__main__':
     b,h,w,c = 4, 224, 224, 3
     x = tf.random.normal((b,h,w,c))
     # net = TransformationNet()
+    # import IPython; IPython.embed(); exit(1)
     net = FastNST()
     net.build(input_shape=(None,h,w,c))
     net.summary()
-    # import IPython; IPython.embed(); exit(1)
-    out = net(x)
+    outputs = net(x)
     gen = net.transform(x)
-    print(out.shape)
+    print(len(outputs))
     print(gen.shape)
