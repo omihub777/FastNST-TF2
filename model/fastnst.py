@@ -58,7 +58,7 @@ class FastNST(tf.keras.Model):
 
 
 if __name__ == '__main__':
-    b,h,w,c = 4, 256, 256, 3
+    b,h,w,c = 4, 224, 224, 3
     x = tf.random.normal((b,h,w,c))
     # net = TransformationNet()
     net = FastNST()
