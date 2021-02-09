@@ -36,7 +36,7 @@ def get_dataset(args):
 def get_model(args):
     if args.model=='fastnst':
         from model.fastnst import FastNST
-        net = FastNST()
+        net = FastNST(args)
     else:
         raise NotImplementedError()
 
@@ -102,3 +102,11 @@ def log_image(orig_images,logger, curr_step, model):
     gen_images = model.transform(tf.stop_gradient(orig_images))
     gen_grids = image_grid(gen_images, size=int(math.sqrt(num_images)))
     logger.log_image(gen_grids, step=curr_step)
+
+def cycle(iterable):
+    iterator = iter(iterable)
+    while True:
+        try:
+            yield next(iterator)
+        except StopIteration:
+            iterator = iter(iterable)

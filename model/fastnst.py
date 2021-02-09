@@ -10,21 +10,21 @@ sys.path.append(os.path.abspath("model"))
 from layer_utils import ConvBlock, ResBlock, TransposedConvBlock
 
 class TransformationNet(tf.keras.Model):
-    def __init__(self):
+    def __init__(self, nm='b'):
         super(TransformationNet, self).__init__()
-        self.enc1 = ConvBlock(32, k=9, s=1)
-        self.enc2 = ConvBlock(64, k=3, s=2)
-        self.enc3 = ConvBlock(128, k=3, s=2)
+        self.enc1 = ConvBlock(32, k=9, s=1, nm=nm)
+        self.enc2 = ConvBlock(64, k=3, s=2, nm=nm)
+        self.enc3 = ConvBlock(128, k=3, s=2, nm=nm)
 
-        self.blc1 = ResBlock(128)
-        self.blc2 = ResBlock(128)
-        self.blc3 = ResBlock(128)
-        self.blc4 = ResBlock(128)
-        self.blc5 = ResBlock(128)
+        self.blc1 = ResBlock(128, nm=nm)
+        self.blc2 = ResBlock(128, nm=nm)
+        self.blc3 = ResBlock(128, nm=nm)
+        self.blc4 = ResBlock(128, nm=nm)
+        self.blc5 = ResBlock(128, nm=nm)
 
-        self.dec1 = TransposedConvBlock(64, k=3, s=2)
-        self.dec2 = TransposedConvBlock(32, k=3, s=2)
-        self.last = ConvBlock(3, k=9, s=1)
+        self.dec1 = TransposedConvBlock(64, k=3, s=2, nm=nm)
+        self.dec2 = TransposedConvBlock(32, k=3, s=2, nm=nm)
+        self.last = ConvBlock(3, k=9, s=1, nm=nm)
 
     def call(self, x):
         out = self.enc1(x)
@@ -41,9 +41,9 @@ class TransformationNet(tf.keras.Model):
         return out
 
 class FastNST(tf.keras.Model):
-    def __init__(self):
+    def __init__(self, args):
         super(FastNST, self).__init__()
-        self.trans_net = TransformationNet()
+        self.trans_net = TransformationNet(nm=args.n_mode)
         base = tf.keras.applications.VGG16(include_top=False, weights='imagenet')
         self.loss_net = tf.keras.Model(base.input, base.layers[-6].output)
         self.loss_net.trainable = False

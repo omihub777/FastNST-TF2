@@ -2,11 +2,10 @@ import comet_ml
 import tensorflow as tf
 import argparse
 from utils import get_optimizer, get_model, train_step, \
-    get_dataset, get_criterion, log_image
-import itertools
+    get_dataset, get_criterion, log_image, cycle
 import math
 import tqdm
-#
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", default='fastnst', type=str)
 parser.add_argument("--content-path",  default="data/content", type=str)
@@ -21,6 +20,7 @@ parser.add_argument("--epochs", default=10, type=int)
 parser.add_argument("--log-image-step", default=100, type=int, help="Number of steps ")
 parser.add_argument("--style-coef", default=1.0, type=float)
 parser.add_argument("--mixed-precision", action='store_true')
+parser.add_argument("--n-mode", default='b', help="normalization mode ['b','i'] ")
 args = parser.parse_args()
 
 if args.mixed_precision:
@@ -45,7 +45,7 @@ logger.set_name(f'{args.model}')
 with logger.train():
     train_loss.reset_states()
     for epoch in range(1, args.epochs+1):
-        for step, (images, styles) in enumerate(zip(tqdm.tqdm(content_ds), itertools.cycle(style_ds)), 1):
+        for step, (images, styles) in enumerate(zip(tqdm.tqdm(content_ds), cycle(style_ds)), 1):
             curr_step = epoch*step
             if curr_step%args.log_image_step==0:
                 orig_images = tf.identity(images)
