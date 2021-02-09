@@ -41,9 +41,9 @@ class TransformationNet(tf.keras.Model):
         return out
 
 class FastNST(tf.keras.Model):
-    def __init__(self, args):
+    def __init__(self, n_mode='b'):
         super(FastNST, self).__init__()
-        self.trans_net = TransformationNet(nm=args.n_mode)
+        self.trans_net = TransformationNet(nm=n_mode)
         base = tf.keras.applications.VGG16(include_top=False, weights='imagenet')
         self.loss_net = tf.keras.Model(base.input, base.layers[-6].output)
         self.loss_net.trainable = False
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     x = tf.random.normal((b,h,w,c))
     # net = TransformationNet()
     # import IPython; IPython.embed(); exit(1)
-    net = FastNST()
+    net = FastNST(n_mode='b')
     net.build(input_shape=(None,h,w,c))
     net.summary()
     outputs = net(x)

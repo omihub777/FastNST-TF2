@@ -36,7 +36,7 @@ def get_dataset(args):
 def get_model(args):
     if args.model=='fastnst':
         from model.fastnst import FastNST
-        net = FastNST(args)
+        net = FastNST(n_mode=args.n_mode)
     else:
         raise NotImplementedError()
 
