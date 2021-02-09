@@ -15,12 +15,15 @@ parser.add_argument("--learning-rate", default=1e-3, type=float)
 parser.add_argument("--beta-1", default=0.9, type=float)
 parser.add_argument("--beta-2", default=0.999, type=float)
 parser.add_argument("--size", default=224, type=int)
-parser.add_argument("--batch-size", default=16, type=int)
+parser.add_argument("--batch-size", default=4, type=int)
 parser.add_argument("--epochs", default=10, type=int)
 parser.add_argument("--log-image-step", default=100, type=int, help="Number of steps ")
 parser.add_argument("--style-coef", default=1.0, type=float)
+parser.add_argument("--mixed-precision", action='store_true')
 args = parser.parse_args()
 
+if args.mixed_precision:
+    tf.keras.mixed_precision.set_global_policy('mixed_float16')
 with open("data/api_key.txt",'r') as f:
     api_key = f.readline()
 
