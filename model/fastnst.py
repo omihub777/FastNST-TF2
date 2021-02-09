@@ -51,7 +51,7 @@ class FastNST(tf.keras.Model):
 
     def call(self, x, training=True):
         out = self.trans_net(x, training=training)
-        outputs = self.extract(out, training=training)
+        outputs = self.extract(out, training=False)
         return outputs
 
     def transform(self, x, training=False):
