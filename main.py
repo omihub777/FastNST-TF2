@@ -1,7 +1,8 @@
 import comet_ml
 import tensorflow as tf
 import argparse
-from utils import get_optimizer, get_model, train_step, get_dataset, get_criterion, image_grid
+from utils import get_optimizer, get_model, train_step, \
+    get_dataset, get_criterion, log_image
 import itertools
 import math
 import tqdm
@@ -40,28 +41,20 @@ logger = comet_ml.Experiment(
     auto_param_logging=True
 )
 logger.set_name(f'{args.model}')
-num_images = args.batch_size
+# num_images = args.batch_size
 with logger.train():
     train_loss.reset_states()
     for epoch in range(1, args.epochs+1):
         for step, (images, styles) in enumerate(zip(tqdm.tqdm(content_ds), itertools.cycle(style_ds)), 1):
             curr_step = epoch*step
             if curr_step%args.log_image_step==0:
-                images = images[:num_images]
-                orig_images = tf.identity(images[:num_images])
-
-
+                orig_images = tf.identity(images)
 
             loss = train_step(images, styles, model, criterion, optimizer, train_loss, args.style_coef, is_mixed=args.mixed_precision)
             logger.log_metric(name='train_loss',value=loss)
             logger.log_parameters(vars(args))
             if curr_step%args.log_image_step==0:
-                tf.stop_gradient(orig_images)
-                orig_grids = image_grid(orig_images, size=int(math.sqrt(num_images)))
-                logger.log_image(orig_grids, step=curr_step)
-                gen_images = model.transform(orig_images)
-                gen_grids = image_grid(gen_images, size=int(math.sqrt(num_images)))
-                logger.log_image(gen_grids, step=curr_step)
+                log_image(orig_images, logger)
 
         filename=f'{args.model}_transform.hdf5'
         model.trans_net.save_weights(filename)

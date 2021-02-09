@@ -85,6 +85,14 @@ def train_step(images, styles, model, criterion, optimizer,train_loss, style_coe
     loss = train_loss(loss)
     return loss
 
+@tf.function
+def log_image(orig_images,logger):
+    num_images = orig_images.shape[0]
+    orig_grids = image_grid(orig_images, size=int(math.sqrt(num_images)))
+    logger.log_image(orig_grids, step=curr_step)
+    gen_images = model.transform(orig_images)
+    gen_grids = image_grid(gen_images, size=int(math.sqrt(num_images)))
+    logger.log_image(gen_grids, step=curr_step)
 
 
 def image_grid(x, size=6):
