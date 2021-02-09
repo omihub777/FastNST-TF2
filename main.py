@@ -54,7 +54,7 @@ with logger.train():
             logger.log_metric(name='train_loss',value=loss)
             logger.log_parameters(vars(args))
             if curr_step%args.log_image_step==0:
-                log_image(orig_images, logger, curr_step)
+                log_image(orig_images, logger, curr_step, model)
 
         filename=f'{args.model}_transform.hdf5'
         model.trans_net.save_weights(filename)
