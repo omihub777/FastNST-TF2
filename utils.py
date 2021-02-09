@@ -65,7 +65,7 @@ def gram_matrix(input_tensor):
 
 
 @tf.function
-def train_step(images, styles, model, criterion, optimizer,train_loss):
+def train_step(images, styles, model, criterion, optimizer,train_loss, style_coef=1.):
     with tf.GradientTape() as tape:
         outputs = model(images, training=True)
         s_outputs = model.extract(styles)
@@ -75,7 +75,7 @@ def train_step(images, styles, model, criterion, optimizer,train_loss):
 
         content_loss = criterion(outputs[2], c_output)
         style_loss = tf.reduce_sum([criterion(gram_matrix(output), gram_matrix(s_output)) for output, s_output in zip(outputs, s_outputs)])
-        loss = content_loss+style_loss
+        loss = content_loss+ style_coef * style_loss
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 

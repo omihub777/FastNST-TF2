@@ -18,6 +18,7 @@ parser.add_argument("--size", default=224, type=int)
 parser.add_argument("--batch-size", default=16, type=int)
 parser.add_argument("--epochs", default=10, type=int)
 parser.add_argument("--log-image-step", default=100, type=int, help="Number of steps ")
+parser.add_argument("--style-coef", default=1.0, type=float)
 args = parser.parse_args()
 
 with open("data/api_key.txt",'r') as f:
@@ -39,24 +40,25 @@ logger.set_name(f'{args.model}')
 num_images = 16
 with logger.train():
     train_loss.reset_states()
-    for epoch in range(args.epochs):
-        for step, (images, styles) in enumerate(zip(tqdm.tqdm(content_ds), itertools.cycle(style_ds))):
-            if step%args.log_image_step==0:
+    for epoch in range(1, args.epochs+1):
+        for step, (images, styles) in enumerate(zip(tqdm.tqdm(content_ds), itertools.cycle(style_ds)), 1):
+            curr_step = epoch*step
+            if curr_step%args.log_image_step==0:
                 images = images[:num_images]
                 orig_images = tf.identity(images[:num_images])
 
 
 
-            loss = train_step(images, styles, model, criterion, optimizer, train_loss)
+            loss = train_step(images, styles, model, criterion, optimizer, train_loss, args.style_coef)
             logger.log_metric(name='train_loss',value=loss)
             logger.log_parameters(vars(args))
-            if step%args.log_image_step==0:
+            if curr_step%args.log_image_step==0:
                 tf.stop_gradient(orig_images)
                 orig_grids = image_grid(orig_images, size=int(math.sqrt(num_images)))
-                logger.log_image(orig_grids, step=step)
+                logger.log_image(orig_grids, step=curr_step)
                 gen_images = model.transform(orig_images)
                 gen_grids = image_grid(gen_images, size=int(math.sqrt(num_images)))
-                logger.log_image(gen_grids, step=step)
+                logger.log_image(gen_grids, step=curr_step)
 
     filename=f'{args.model}_transform.hdf5'
     model.trans_net.save_weights(filename)
