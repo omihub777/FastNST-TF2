@@ -60,6 +60,6 @@ with logger.train():
                 gen_grids = image_grid(gen_images, size=int(math.sqrt(num_images)))
                 logger.log_image(gen_grids, step=curr_step)
 
-    filename=f'{args.model}_transform.hdf5'
-    model.trans_net.save_weights(filename)
-    logger.log_asset(filename)
+        filename=f'{args.model}_transform.hdf5'
+        model.trans_net.save_weights(filename)
+        logger.log_asset(filename)
