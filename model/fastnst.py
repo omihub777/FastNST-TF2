@@ -49,18 +49,25 @@ class FastNST(tf.keras.Model):
         self.loss_net.trainable = False
         self.outputs_name = ['block1_conv2', 'block2_conv2', 'block3_conv3', 'block4_conv3']
 
-    def call(self, x):
-        out = self.trans_net(x)
-        outputs = []
-        for layer in self.loss_net.layers:
-            x = layer(x)
-            if layer.name in self.outputs_name:
-                outputs.append(x)
+    def call(self, x, training=True):
+        out = self.trans_net(x, training=training)
+        outputs = self.extract(out, training=training)
         return outputs
 
-    def transform(self, x):
-        out = self.trans_net(x, trainig=False)
+    def transform(self, x, training=False):
+        """feed-forward for transformation net"""
+        out = self.trans_net(x, training=training)
         return out
+
+    def extract(self, x, training=False):
+        """feed-forward for loss net"""
+        outputs = []
+        for layer in self.loss_net.layers:
+            x = layer(x, training=training)
+            if layer.name in self.outputs_name:
+                outputs.append(x)
+
+        return outputs
 
 
 if __name__ == '__main__':

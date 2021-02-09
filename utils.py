@@ -16,7 +16,8 @@ def get_dataset(args):
         img = tf.image.resize(img, (args.size, args.size))
         return img
 
-    content_filenames, style_filenames = get_image_paths(args.content_path), get_image_paths(args.style_path)
+    content_filenames, style_filenames = get_image_paths(args.content_path), get_image_paths(args.style_path, fmt='jpg')
+    # import IPython; IPython.embed(); exit(1)
     content_ds = tf.data.Dataset.from_tensor_slices(content_filenames)
     content_ds = content_ds.shuffle(len(content_filenames))
     content_ds = content_ds.map(parse_func)
@@ -40,7 +41,7 @@ def get_model(args):
 
     return net
 
-def get_criterions(args):
+def get_criterion(args):
     if args.model=='fastnst':
         criterion = tf.keras.losses.MeanSquaredError()
     else:
@@ -62,20 +63,28 @@ def gram_matrix(input_tensor):
     num_locations = tf.cast(input_shape[1]*input_shape[2], tf.float32)
     return result/(num_locations)
 
-train_loss = tf.keras.metrics.Mean(name='train_loss')
 
 @tf.function
-def train_step(images, styles, model, criterion, optimizer):
+def train_step(images, styles, model, criterion, optimizer,train_loss):
     with tf.GradientTape() as tape:
         outputs = model(images, training=True)
-        s_outputs = model.loss_net(styles, trainig=True)
-        c_output = model.loss_net(images, trainig=True)[2]
+        s_outputs = model.extract(styles)
+        c_output = model.extract(images)[2]
 
-        content_loss = criterion(output[2], c_output)
+        # import IPython; IPython.embed(); exit(1)
+
+        content_loss = criterion(outputs[2], c_output)
         style_loss = tf.reduce_sum([criterion(gram_matrix(output), gram_matrix(s_output)) for output, s_output in zip(outputs, s_outputs)])
         loss = content_loss+style_loss
-    gradients = tape.gradien(loss, model.trainable_variables)
+    gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
     train_loss(loss)
 
+
+def image_grid(x, size=6):
+    t = tf.unstack(x[:size * size], num=size*size, axis=0)
+    rows = [tf.concat(t[i*size:(i+1)*size], axis=0) 
+            for i in range(size)]
+    image = tf.concat(rows, axis=1)
+    return image
