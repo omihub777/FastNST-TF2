@@ -1,6 +1,7 @@
 memo.md
 data/*
 !data/.gitkeep
+*.hdf5
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
