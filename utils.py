@@ -79,7 +79,9 @@ def train_step(images, styles, model, criterion, optimizer,train_loss):
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
-    train_loss(loss)
+    loss = train_loss(loss)
+    return loss
+
 
 
 def image_grid(x, size=6):

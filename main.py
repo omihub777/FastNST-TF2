@@ -4,6 +4,7 @@ import argparse
 from utils import get_optimizer, get_model, train_step, get_dataset, get_criterion, image_grid
 import itertools
 import math
+import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", default='fastnst', type=str)
@@ -16,6 +17,7 @@ parser.add_argument("--beta-2", default=0.999, type=float)
 parser.add_argument("--size", default=224, type=int)
 parser.add_argument("--batch-size", default=16, type=int)
 parser.add_argument("--epochs", default=10, type=int)
+parser.add_argument("--log-image-step", default=100, type=int, help="Number of steps ")
 args = parser.parse_args()
 
 with open("data/api_key.txt",'r') as f:
@@ -38,21 +40,23 @@ num_images = 16
 with logger.train():
     train_loss.reset_states()
     for epoch in range(args.epochs):
-        for step, (images, styles) in enumerate(zip(content_ds, itertools.cycle(style_ds))):
-            if step%100==0:
+        for step, (images, styles) in enumerate(zip(tqdm.tqdm(content_ds), itertools.cycle(style_ds))):
+            if step%args.log_image_step==0:
                 images = images[:num_images]
                 orig_images = tf.identity(images[:num_images])
 
 
 
-            train_step(images, styles, model, criterion, optimizer, train_loss)
-            if step%100==0:
+            loss = train_step(images, styles, model, criterion, optimizer, train_loss)
+            logger.log_metric(name='train_loss',value=loss)
+            logger.log_parameters(vars(args))
+            if step%args.log_image_step==0:
                 tf.stop_gradient(orig_images)
                 orig_grids = image_grid(orig_images, size=int(math.sqrt(num_images)))
-                logger.log_image(orig_grids)
+                logger.log_image(orig_grids, step=step)
                 gen_images = model.transform(orig_images)
                 gen_grids = image_grid(gen_images, size=int(math.sqrt(num_images)))
-                logger.log_image(gen_grids)
+                logger.log_image(gen_grids, step=step)
 
     filename=f'{args.model}_transform.hdf5'
     model.trans_net.save_weights(filename)
