@@ -86,19 +86,19 @@ def train_step(images, styles, model, criterion, optimizer,train_loss, style_coe
     loss = train_loss(loss)
     return loss
 
-@tf.function
-def log_image(orig_images,logger, curr_step, model):
-    num_images = orig_images.shape[0]
-    orig_grids = image_grid(orig_images, size=int(math.sqrt(num_images)))
-    logger.log_image(orig_grids, step=curr_step)
-    gen_images = model.transform(orig_images)
-    gen_grids = image_grid(gen_images, size=int(math.sqrt(num_images)))
-    logger.log_image(gen_grids, step=curr_step)
-
-
 def image_grid(x, size=6):
     t = tf.unstack(x[:size * size], num=size*size, axis=0)
     rows = [tf.concat(t[i*size:(i+1)*size], axis=0) 
             for i in range(size)]
     image = tf.concat(rows, axis=1)
     return image
+
+
+# @tf.function
+def log_image(orig_images,logger, curr_step, model): 
+    num_images = orig_images.shape[0]
+    orig_grids = image_grid(orig_images, size=int(math.sqrt(num_images)))
+    logger.log_image(orig_grids, step=curr_step)
+    gen_images = model.transform(tf.stop_gradient(orig_images))
+    gen_grids = image_grid(gen_images, size=int(math.sqrt(num_images)))
+    logger.log_image(gen_grids, step=curr_step)
