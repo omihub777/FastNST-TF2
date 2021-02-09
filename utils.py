@@ -2,6 +2,7 @@ import tensorflow as tf
 import sys, os
 sys.path.append(os.path.abspath("model"))
 import glob
+import math
 
 def get_image_paths(data_path, fmt="png"):
     filenames = glob.glob(f"{data_path}/*.{fmt}")
