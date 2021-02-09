@@ -25,14 +25,14 @@ args = parser.parse_args()
 
 if args.mixed_precision:
     tf.keras.mixed_precision.set_global_policy('mixed_float16')
-with open("data/api_key.txt",'r') as f:
-    api_key = f.readline()
 
 content_ds, style_ds = get_dataset(args)
 model = get_model(args)
 criterion = get_criterion(args)
 optimizer = get_optimizer(args)
 train_loss = tf.keras.metrics.Mean(name='train_loss')
+with open("data/api_key.txt",'r') as f:
+    api_key = f.readline()
 
 logger = comet_ml.Experiment(
     api_key=api_key,
@@ -46,6 +46,7 @@ with logger.train():
     train_loss.reset_states()
     for epoch in range(1, args.epochs+1):
         for step, (images, styles) in enumerate(zip(tqdm.tqdm(content_ds), cycle(style_ds)), 1):
+            if images.shape[0] != styles.shape[0]: continue
             curr_step = epoch*step
             if curr_step%args.log_image_step==0:
                 orig_images = tf.identity(images)
