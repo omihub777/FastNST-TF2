@@ -2,13 +2,13 @@ import comet_ml
 import tensorflow as tf
 import argparse
 from utils import get_optimzier, get_model, train_step, get_dataset
-
+import itertools
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", default='fastnst', type=str)
-parser.add_argument("--api-key", required=True)
-parser.add_argument("--content-path", required=True)
-parser.add_argument("--style-path", required=True)
+parser.add_argument("--api-key", required=True, type=str)
+parser.add_argument("--content-path",  default="data/content", type=str)
+parser.add_argument("--style-path", default="data/trainB",type=str)
 parser.add_argument("--optimizer", default="adam", type=str)
 parser.add_argument("--learning-rate", default=1e-3, type=float)
 parser.add_argument("--beta-1", default=0.9, type=float)
@@ -19,7 +19,7 @@ parser.add_argument("--epochs", default=10, type=int)
 args = parser.parse_args()
 
 
-train_ds = get_dataset(args)
+content_ds, style_ds = get_dataset(args)
 model = get_model(args)
 criterion = get_criterion(args)
 optimizer = get_optimzier(args)
@@ -33,7 +33,7 @@ logger = comet_ml.Experiment(
 logger.set_name(f'{args.model}')
 with logger.train():
     for epoch in range(args.epochs):
-        for images, styles in train_ds:
+        for images, styles in zip(content_ds, itertools.cycle(style_ds)):
             train_step(images, styles, model, criterion, optimizer)
             gen_images = model.transform(images)
             logger.log_image(gen_images)

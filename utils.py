@@ -1,11 +1,35 @@
 import tensorflow as tf
 import sys, os
 sys.path.append(os.path.abspath("model"))
+import glob
+
+def get_image_paths(data_path, fmt="png"):
+    filenames = glob.glob(f"{data_path}/*.{fmt}")
+    return filenames
 
 def get_dataset(args):
     """Returns (images, styles)"""
-    args.content_path, args.style_path
-    ...
+    def parse_func(filename):
+        p = tf.io.read_file(filename)
+        img = tf.io.decode_png(p, channels=3)
+        img = tf.image.convert_image_dtype(img, tf.float32)
+        img = tf.image.resize(img, (args.size, args.size))
+        return img
+
+    content_filenames, style_filenames = get_image_paths(args.content_path), get_image_paths(args.style_path)
+    content_ds = tf.data.Dataset.from_tensor_slices(content_filenames)
+    content_ds = content_ds.shuffle(len(content_filenames))
+    content_ds = content_ds.map(parse_func)
+    content_ds = content_ds.batch(args.batch_size)
+    content_ds = content_ds.prefetch(1)
+
+    style_ds = tf.data.Dataset.from_tensor_slices(style_filenames)
+    style_ds = style_ds.shuffle(len(style_filenames))
+    style_ds = style_ds.map(parse_func)
+    style_ds = style_ds.batch(args.batch_size)
+    style_ds = style_ds.prefetch(1)
+
+    return content_ds, style_ds
 
 def get_model(args):
     if args.model=='fastnst':
