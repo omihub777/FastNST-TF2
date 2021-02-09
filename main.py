@@ -52,7 +52,7 @@ with logger.train():
 
 
 
-            loss = train_step(images, styles, model, criterion, optimizer, train_loss, args.style_coef)
+            loss = train_step(images, styles, model, criterion, optimizer, train_loss, args.style_coef, is_mixed=args.mixed_precision)
             logger.log_metric(name='train_loss',value=loss)
             logger.log_parameters(vars(args))
             if curr_step%args.log_image_step==0:

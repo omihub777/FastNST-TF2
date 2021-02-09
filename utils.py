@@ -57,16 +57,18 @@ def get_optimizer(args):
 
     return optimizer
 
-def gram_matrix(input_tensor):
+def gram_matrix(input_tensor, is_mixed):
     result = tf.linalg.einsum('bijc,bijd->bcd', input_tensor, input_tensor)
     input_shape = tf.shape(input_tensor)
-    # num_locations = tf.cast(input_shape[1]*input_shape[2], tf.float32)
-    num_locations = input_shape[1]*input_shape[2]
+    if is_mixed:
+        num_locations = tf.cast(input_shape[1]*input_shape[2], tf.float16)
+    else:
+        num_locations = tf.cast(input_shape[1]*input_shape[2], tf.float32)
     return result/(num_locations)
 
 
 @tf.function
-def train_step(images, styles, model, criterion, optimizer,train_loss, style_coef=1.):
+def train_step(images, styles, model, criterion, optimizer,train_loss, style_coef=1., is_mixed=False):
     with tf.GradientTape() as tape:
         outputs = model(images, training=True)
         s_outputs = model.extract(styles)
@@ -75,7 +77,7 @@ def train_step(images, styles, model, criterion, optimizer,train_loss, style_coe
         # import IPython; IPython.embed(); exit(1)
 
         content_loss = criterion(outputs[2], c_output)
-        style_loss = tf.reduce_sum([criterion(gram_matrix(output), gram_matrix(s_output)) for output, s_output in zip(outputs, s_outputs)])
+        style_loss = tf.reduce_sum([criterion(gram_matrix(output, is_mixed), gram_matrix(s_output, is_mixed)) for output, s_output in zip(outputs, s_outputs)])
         loss = content_loss+ style_coef * style_loss
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
