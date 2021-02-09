@@ -37,7 +37,7 @@ logger = comet_ml.Experiment(
     auto_param_logging=True
 )
 logger.set_name(f'{args.model}')
-num_images = 16
+num_images = args.batch_size
 with logger.train():
     train_loss.reset_states()
     for epoch in range(1, args.epochs+1):
