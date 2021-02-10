@@ -67,19 +67,23 @@ def gram_matrix(input_tensor, is_mixed):
         num_locations = tf.cast(input_shape[1]*input_shape[2], tf.float32)
     return result/(num_locations)
 
+def calc_loss(criterion, outputs, c_output, s_outputs, style_coef, is_mixed):
+    content_loss = criterion(outputs[2], c_output)
+    style_loss = tf.reduce_sum([criterion(gram_matrix(output, is_mixed), gram_matrix(s_output, is_mixed)) for output, s_output in zip(outputs, s_outputs)])
+    loss = content_loss+ style_coef * style_loss
+    return loss
+
 
 @tf.function
 def train_step(images, styles, model, criterion, optimizer,train_loss, style_coef=1., is_mixed=False):
     with tf.GradientTape() as tape:
         outputs = model(images, training=True)
-        s_outputs = model.extract(styles)
         c_output = model.extract(images)[2]
+        s_outputs = model.extract(styles)
 
         # import IPython; IPython.embed(); exit(1)
+        loss = calc_loss(criterion, outputs, c_output, s_outputs, style_coef, is_mixed)
 
-        content_loss = criterion(outputs[2], c_output)
-        style_loss = tf.reduce_sum([criterion(gram_matrix(output, is_mixed), gram_matrix(s_output, is_mixed)) for output, s_output in zip(outputs, s_outputs)])
-        loss = content_loss+ style_coef * style_loss
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
@@ -88,8 +92,7 @@ def train_step(images, styles, model, criterion, optimizer,train_loss, style_coe
 
 def image_grid(x, size=6):
     t = tf.unstack(x[:size * size], num=size*size, axis=0)
-    rows = [tf.concat(t[i*size:(i+1)*size], axis=0) 
-            for i in range(size)]
+    rows = [tf.concat(t[i*size:(i+1)*size], axis=0) for i in range(size)]
     image = tf.concat(rows, axis=1)
     return image
 
