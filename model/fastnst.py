@@ -72,7 +72,7 @@ class FastNST(tf.keras.Model):
     def c_extract(self, x, training=False):
         """feed-foward for (content-)loss net"""
         for layer in self.loss_net.layers:
-            x = layer(x, trainig=training)
+            x = layer(x, training=training)
             if layer.name == self.c_output_name:
                 return x
         raise ValueError(f"There is no such layer: {self.c_output_name}")
