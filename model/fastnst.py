@@ -48,6 +48,7 @@ class FastNST(tf.keras.Model):
         self.loss_net = tf.keras.Model(base.input, base.layers[-6].output)
         self.loss_net.trainable = False
         self.outputs_name = ['block1_conv2', 'block2_conv2', 'block3_conv3', 'block4_conv3']
+        self.c_output_name = 'block3_conv3'
 
     def call(self, x, training=True):
         out = self.trans_net(x, training=training)
@@ -66,8 +67,15 @@ class FastNST(tf.keras.Model):
             x = layer(x, training=training)
             if layer.name in self.outputs_name:
                 outputs.append(x)
-
         return outputs
+    
+    def c_extract(self, x, training=False):
+        """feed-foward for (content-)loss net"""
+        for layer in self.loss_net.layers:
+            x = layer(x, trainig=training)
+            if layer.name == self.c_output_name:
+                return x
+        raise ValueError(f"There is no such layer: {self.c_output_name}")
 
 
 if __name__ == '__main__':

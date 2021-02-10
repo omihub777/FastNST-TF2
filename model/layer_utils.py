@@ -45,7 +45,7 @@ class ResBlock(tf.keras.Model):
 
     def call(self, x):
         out = self.conv1(x)
-        out = self.norm(self.conv2(x))
+        out = self.norm(self.conv2(out))
         return out+x
 
 

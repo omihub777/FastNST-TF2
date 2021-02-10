@@ -78,7 +78,7 @@ def calc_loss(criterion, outputs, c_output, s_outputs, style_coef, is_mixed):
 def train_step(images, styles, model, criterion, optimizer,train_loss, style_coef=1., is_mixed=False):
     with tf.GradientTape() as tape:
         outputs = model(images, training=True)
-        c_output = model.extract(images)[2]
+        c_output = model.c_extract(images)
         s_outputs = model.extract(styles)
 
         # import IPython; IPython.embed(); exit(1)
