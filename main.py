@@ -41,13 +41,13 @@ logger = comet_ml.Experiment(
     auto_param_logging=True
 )
 logger.set_name(f'{args.model}')
-# num_images = args.batch_size
+curr_step = 0
 with logger.train():
     train_loss.reset_states()
     for epoch in range(1, args.epochs+1):
-        for step, (images, styles) in enumerate(zip(tqdm.tqdm(content_ds), cycle(style_ds)), 1):
+        for images, styles in zip(tqdm.tqdm(content_ds), cycle(style_ds)):
             if images.shape[0] != styles.shape[0]: continue
-            curr_step = epoch*step
+            curr_step += 1
             if curr_step%args.log_image_step==0:
                 orig_images = tf.identity(images)
 
@@ -56,7 +56,6 @@ with logger.train():
             logger.log_parameters(vars(args))
             if curr_step%args.log_image_step==0:
                 log_image(orig_images, logger, curr_step, model)
-
         filename=f'{args.model}_transform.hdf5'
         model.trans_net.save_weights(filename)
         logger.log_asset(filename)
